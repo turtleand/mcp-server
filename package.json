@@ -1,0 +1,24 @@
+{
+  "name": "@turtleand/mcp-server",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "MCP server for Turtleand knowledge base",
+  "bin": {
+    "mcp-server": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc && cp src/content-index.json dist/",
+    "build-index": "npx tsx scripts/build-index.ts",
+    "start": "node dist/index.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0"
+  }
+}
