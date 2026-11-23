@@ -1,5 +1,7 @@
-import { readFileSync, readdirSync, writeFileSync } from "fs";
-import { basename, join } from "path";
+import { writeFileSync } from "fs";
+import { readMarkdownFiles } from "./content-files.js";
+import { basename, join, resolve } from "path";
+import { fileURLToPath } from "url";
 
 interface Article {
   slug: string;
@@ -51,33 +53,42 @@ function parseFrontmatter(content: string): { meta: Record<string, any>; body: s
   return { meta, body: match[2] };
 }
 
-const articles: Article[] = [];
+export function buildArticles(inputSources = sources): Article[] {
+  const articles: Article[] = [];
 
-for (const src of sources) {
-  let files: string[];
-  try {
-    files = readdirSync(src.dir).filter(f => f.endsWith(src.ext));
-  } catch {
-    console.warn(`Skipping ${src.dir} (not found)`);
-    continue;
+  for (const src of inputSources) {
+    for (const { file, content } of readMarkdownFiles(src.dir, src.ext)) {
+      const { meta, body } = parseFrontmatter(content);
+      if (meta.draft === "true") continue;
+      const slug = basename(file, src.ext);
+      articles.push({
+        slug,
+        title: meta.title || slug,
+        summary: meta.summary || meta.description || "",
+        source: src.source,
+        module: meta.module || "",
+        tags: Array.isArray(meta.tags) ? meta.tags : [],
+        body,
+        url: src.urlBase + slug,
+      });
+    }
   }
-  for (const file of files) {
-    const content = readFileSync(join(src.dir, file), "utf-8");
-    const { meta, body } = parseFrontmatter(content);
-    if (meta.draft === "true") continue;
-    const slug = basename(file, src.ext);
-    articles.push({
-      slug,
-      title: meta.title || slug,
-      summary: meta.summary || meta.description || "",
-      source: src.source,
-      module: meta.module || "",
-      tags: Array.isArray(meta.tags) ? meta.tags : [],
-      body,
-      url: src.urlBase + slug,
-    });
-  }
+
+  return articles;
 }
 
-writeFileSync(join(import.meta.dirname!, "../src/content-index.json"), JSON.stringify(articles, null, 2));
-console.log(`Indexed ${articles.length} articles`);
+export function writeIndex(output: string, inputSources = sources): number {
+  const articles = buildArticles(inputSources);
+  writeFileSync(output, JSON.stringify(articles, null, 2));
+  return articles.length;
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  try {
+    const count = writeIndex(join(import.meta.dirname!, "../src/content-index.json"));
+    console.log(`Indexed ${count} articles`);
+  } catch {
+    console.error("Index build failed. Check the configured source directories, article files and output permissions.");
+    process.exitCode = 1;
+  }
+}

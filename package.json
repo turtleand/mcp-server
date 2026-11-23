@@ -8,8 +8,9 @@
   },
   "scripts": {
     "build": "tsc && cp src/content-index.json dist/",
-    "build-index": "npx tsx scripts/build-index.ts",
-    "start": "node dist/index.js"
+    "build-index": "node --import tsx scripts/build-index.ts",
+    "start": "node dist/index.js",
+    "test:index": "node --import tsx --test tests/content-index.test.ts"
   },
   "license": "MIT",
   "dependencies": {

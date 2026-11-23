@@ -74,6 +74,18 @@ The content index is bundled in the package at build time. When the server start
 
 The client's LLM decides when to call these tools based on the conversation. You don't need to do anything special.
 
+## Rebuilding the index
+
+`npm run build-index` requires all configured source directories to be present.
+Use regular `.md` or `.mdx` files with a single hard link and no symbolic links
+in the source path. Rebuild on a platform with no-follow file opening, such as
+Linux or macOS. Invalid or unavailable inputs stop the build before the index
+is written. Build from a stable source tree; do not edit, move, or replace
+source files or directories during indexing.
+
+Run the isolated index tests with `npm run test:index`. They use temporary,
+synthetic content rather than local article sources.
+
 ## Running smoke tests
 
 ```bash
